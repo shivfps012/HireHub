@@ -7,6 +7,38 @@ import { motion } from 'framer-motion';
 import Footer from './shared/Footer';
 // const jobsArray = [1, 2, 3, 4, 5, 6, 7, 8];
 
+const isSalaryMatch = (jobSalary, selectedValue) => {
+    if (!selectedValue) return true;
+
+    const normalizedValue = selectedValue.toLowerCase();
+
+    if (!normalizedValue.includes('lakh')) {
+        return false;
+    }
+
+    if (normalizedValue.includes('15lakh+')) {
+        return jobSalary >= 15;
+    }
+
+    if (normalizedValue.includes('10lakh-15lakh')) {
+        return jobSalary >= 10 && jobSalary <= 15;
+    }
+
+    if (normalizedValue.includes('5lakh to 10lakh')) {
+        return jobSalary >= 5 && jobSalary < 10;
+    }
+
+    if (normalizedValue.includes('1lakh to 5lakh')) {
+        return jobSalary >= 1 && jobSalary < 5;
+    }
+
+    if (normalizedValue.includes('42-1lakh')) {
+        return jobSalary < 1;
+    }
+
+    return false;
+};
+
 const Jobs = () => {
     const { allJobs, searchedQuery } = useSelector(store => store.job);
     const [filterJobs, setFilterJobs] = useState(allJobs);
@@ -14,9 +46,15 @@ const Jobs = () => {
     useEffect(() => {
         if (searchedQuery) {
             const filteredJobs = allJobs.filter((job) => {
-                return job.title.toLowerCase().includes(searchedQuery.toLowerCase()) ||
-                    job.description.toLowerCase().includes(searchedQuery.toLowerCase()) ||
-                    job.location.toLowerCase().includes(searchedQuery.toLowerCase())
+                const query = searchedQuery.toLowerCase();
+
+                const textMatch = job.title.toLowerCase().includes(query) ||
+                    job.description.toLowerCase().includes(query) ||
+                    job.location.toLowerCase().includes(query);
+
+                const salaryMatch = isSalaryMatch(job.salary, searchedQuery);
+
+                return textMatch || salaryMatch;
             })
             setFilterJobs(filteredJobs)
         } else {
